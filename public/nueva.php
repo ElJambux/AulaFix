@@ -1,10 +1,16 @@
 <?php
-
 declare(strict_types=1);
 
 session_start();
 
+if (!isset($_SESSION['usuario'])) {
+    header('Location: /login.php');
+    exit;
+}
+
+require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../includes/funciones.php';
+require_once __DIR__ . '/../includes/db.php';
 
 $errores = [];
 
@@ -13,20 +19,9 @@ $descripcion = '';
 $categoria = 'hardware';
 $prioridad = 'media';
 
-$categoriasPermitidas = [
-    'hardware',
-    'software',
-    'red',
-    'otro'
-];
+$categoriasPermitidas = ['hardware', 'software', 'red', 'otro'];
+$prioridadesPermitidas = ['baja', 'media', 'alta'];
 
-$prioridadesPermitidas = [
-    'baja',
-    'media',
-    'alta'
-];
-
-// Procesamos el formulario cuando se envía.
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $titulo = trim($_POST['titulo'] ?? '');
     $descripcion = trim($_POST['descripcion'] ?? '');
@@ -49,6 +44,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Validación de la descripción.
     if ($descripcion === '') {
         $errores[] = 'La descripción es obligatoria.';
+    } elseif (mb_strlen($descripcion) > 1000) {
+        $errores[] = 'La descripción no puede superar los 1000 caracteres.';
     }
 
     // Validación de categoría y prioridad.
@@ -60,19 +57,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errores[] = 'La prioridad seleccionada no es válida.';
     }
 
-    // Si todo es correcto, guardamos la incidencia.
+    // Guardar la incidencia en MySQL.
     if (empty($errores)) {
-        $_SESSION['incidencias'] ??= [];
+        $conexion = conectarBD();
 
-        $_SESSION['incidencias'][] = [
-            'id' => count($_SESSION['incidencias']) + 1,
+        $consulta = $conexion->prepare(
+            'INSERT INTO incidencias
+                (usuario_id, titulo, descripcion, categoria, prioridad, estado)
+             VALUES
+                (:usuario_id, :titulo, :descripcion, :categoria, :prioridad, :estado)'
+        );
+
+        $consulta->execute([
+            'usuario_id' => $_SESSION['usuario']['id'],
             'titulo' => $titulo,
             'descripcion' => $descripcion,
             'categoria' => $categoria,
             'prioridad' => $prioridad,
-            'estado' => 'abierta',
-            'fecha' => date('Y-m-d H:i:s')
-        ];
+            'estado' => 'abierta'
+        ]);
 
         // Patrón Post/Redirect/Get.
         header('Location: /incidencias.php');
@@ -83,28 +86,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $tituloPagina = 'Nueva incidencia';
 
 require_once __DIR__ . '/../includes/cabecera.php';
-
 ?>
 
 <section>
     <h1>Registrar una incidencia</h1>
 
     <?php foreach ($errores as $error): ?>
-        <p class="error">
-            <?= e($error) ?>
-        </p>
+        <p class="error"><?= e($error) ?></p>
     <?php endforeach; ?>
 
     <form method="POST" action="/nueva.php">
 
-        <input type="hidden" name="csrf_token" value="<?= e(obtenerTokenCsrf()) ?>">
+        <input
+            type="hidden"
+            name="csrf_token"
+            value="<?= e(obtenerTokenCsrf()) ?>"
+        >
 
         <label for="titulo">Título</label>
-        <input type="text" id="titulo" name="titulo" maxlength="100" required value="<?= e($titulo) ?>">
+        <input
+            type="text"
+            id="titulo"
+            name="titulo"
+            maxlength="100"
+            required
+            value="<?= e($titulo) ?>"
+        >
 
         <label for="descripcion">Descripción</label>
-        <textarea id="descripcion" name="descripcion" maxlength="1000" required><?= e($descripcion) ?></textarea>
+        <textarea
+            id="descripcion"
+            name="descripcion"
+            maxlength="1000"
+            required
+        ><?= e($descripcion) ?></textarea>
+
         <p id="contador-caracteres">0 / 1000 caracteres</p>
+
         <label for="categoria">Categoría</label>
         <select id="categoria" name="categoria" required>
             <option value="hardware" <?= $categoria === 'hardware' ? 'selected' : '' ?>>Hardware</option>
@@ -121,7 +139,6 @@ require_once __DIR__ . '/../includes/cabecera.php';
         </select>
 
         <button type="submit">Registrar incidencia</button>
-
     </form>
 </section>
 

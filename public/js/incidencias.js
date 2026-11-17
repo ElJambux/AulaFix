@@ -1,4 +1,3 @@
-
 'use strict';
 
 import {
@@ -34,29 +33,33 @@ if (elementoDatos && cuerpoTabla) {
     estado.value = obtenerPreferencia('estado');
 
     const pestanasPermitidas = [
-    'todas',
-    'abierta',
-    'en_curso',
-    'resuelta'
-];
+        'todas',
+        'abierta',
+        'en_curso',
+        'resuelta'
+    ];
 
-let pestanaActual = obtenerPreferencia('pestana', 'todas');
+    let pestanaActual = obtenerPreferencia('pestana', 'todas');
 
-if (!pestanasPermitidas.includes(pestanaActual)) {
-    pestanaActual = 'todas';
-}
+    if (!pestanasPermitidas.includes(pestanaActual)) {
+        pestanaActual = 'todas';
+    }
+
     let campoOrden = 'fecha';
     let ordenAscendente = false;
 
     /**
      * Calcula el tiempo transcurrido desde una fecha.
+     *
      * @param {string} fecha Fecha de la incidencia.
      * @returns {string} Fecha relativa.
      */
     function obtenerFechaRelativa(fecha) {
         const fechaIncidencia = new Date(fecha.replace(' ', 'T'));
 
-        if (Number.isNaN(fechaIncidencia.getTime())) return fecha;
+        if (Number.isNaN(fechaIncidencia.getTime())) {
+            return fecha;
+        }
 
         const minutos = Math.floor(
             (Date.now() - fechaIncidencia.getTime()) / 60000
@@ -66,9 +69,11 @@ if (!pestanasPermitidas.includes(pestanaActual)) {
         if (minutos < 60 && minutos >= 0) return `Hace ${minutos} min`;
 
         const horas = Math.floor(minutos / 60);
+
         if (horas < 24 && horas >= 0) return `Hace ${horas} h`;
 
         const dias = Math.floor(horas / 24);
+
         if (dias < 30 && dias >= 0) return `Hace ${dias} días`;
 
         return fechaIncidencia.toLocaleDateString('es-ES');
@@ -121,7 +126,11 @@ if (!pestanasPermitidas.includes(pestanaActual)) {
             );
         });
 
-        const prioridades = { baja: 1, media: 2, alta: 3 };
+        const prioridades = {
+            baja: 1,
+            media: 2,
+            alta: 3
+        };
 
         filtradas.sort((a, b) => {
             let valorA = a[campoOrden];
@@ -139,6 +148,7 @@ if (!pestanasPermitidas.includes(pestanaActual)) {
             }
 
             const resultado = valorA < valorB ? -1 : valorA > valorB ? 1 : 0;
+
             return ordenAscendente ? resultado : -resultado;
         });
 
@@ -147,14 +157,29 @@ if (!pestanasPermitidas.includes(pestanaActual)) {
         filtradas.forEach(incidencia => {
             const fila = document.createElement('tr');
 
+            // Celda del identificador.
+            const celdaId = document.createElement('td');
+            celdaId.textContent = String(incidencia.id);
+
+            // Celda del título con enlace al detalle.
+            const celdaTitulo = document.createElement('td');
+            const enlace = document.createElement('a');
+
+            enlace.href = `/detalle.php?id=${encodeURIComponent(incidencia.id)}`;
+            enlace.textContent = incidencia.titulo;
+
+            celdaTitulo.appendChild(enlace);
+
+            // Resto de celdas.
             const valores = [
-                incidencia.id,
-                incidencia.titulo,
                 incidencia.categoria,
                 incidencia.prioridad,
                 incidencia.estado,
                 obtenerFechaRelativa(incidencia.fecha)
             ];
+
+            fila.appendChild(celdaId);
+            fila.appendChild(celdaTitulo);
 
             valores.forEach(valor => {
                 const celda = document.createElement('td');
@@ -166,16 +191,19 @@ if (!pestanasPermitidas.includes(pestanaActual)) {
         });
     }
 
+    // Eventos de los filtros.
     [buscar, categoria, prioridad, estado].forEach(control => {
         control.addEventListener('input', () => {
             guardarPreferencia('busqueda', buscar.value);
             guardarPreferencia('categoria', categoria.value);
             guardarPreferencia('prioridad', prioridad.value);
             guardarPreferencia('estado', estado.value);
+
             mostrarIncidencias();
         });
     });
 
+    // Eventos de ordenación.
     document.querySelectorAll('[data-orden]').forEach(boton => {
         boton.addEventListener('click', () => {
             const nuevoCampo = boton.dataset.orden;
@@ -191,10 +219,13 @@ if (!pestanasPermitidas.includes(pestanaActual)) {
         });
     });
 
+    // Eventos de las pestañas.
     document.querySelectorAll('[data-pestana]').forEach(boton => {
         boton.addEventListener('click', () => {
             pestanaActual = boton.dataset.pestana;
+
             guardarPreferencia('pestana', pestanaActual);
+
             mostrarIncidencias();
         });
     });

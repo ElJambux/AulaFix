@@ -20,23 +20,44 @@ AulaFix permite registrar, consultar y gestionar incidencias relacionadas con lo
 
 - Registro e inicio de sesión de usuarios.
 - Gestión de roles: alumno y profesor.
-- Creación y consulta de incidencias.
+- Creación, consulta, edición y eliminación de incidencias.
 - Clasificación por categoría, prioridad y estado.
-- Edición y resolución de incidencias según permisos.
+- Cambio de estado de las incidencias por profesores.
 - Historial de cambios.
 - Filtros, búsqueda y ordenación.
-- Validación de formularios y protección CSRF.
+- Validación de formularios.
+- Protección CSRF.
+- Contraseñas protegidas mediante Argon2id.
+- Gestión de sesiones y permisos.
 
 ## Estructura del proyecto
 
 ```text
 AulaFix/
 ├── config/
+│   └── config.php
 ├── database/
+│   └── esquema.sql
 ├── includes/
+│   ├── cabecera.php
+│   ├── db.php
+│   ├── funciones.php
+│   └── pie.php
 ├── public/
 │   ├── css/
-│   └── js/
+│   │   └── estilos.css
+│   ├── js/
+│   │   ├── app.js
+│   │   ├── formulario.js
+│   │   ├── incidencias.js
+│   │   └── preferencias.js
+│   ├── detalle.php
+│   ├── incidencias.php
+│   ├── index.php
+│   ├── login.php
+│   ├── logout.php
+│   ├── nueva.php
+│   └── registro.php
 ├── docs/
 ├── .gitignore
 └── README.md
@@ -49,11 +70,54 @@ AulaFix/
 - Extensiones PDO y PDO MySQL de PHP.
 - Navegador web moderno.
 
-## Ejecución en local
+## Instalación y ejecución en local
 
-1. Configurar la conexión a MySQL en `config/config.php`.
-2. Crear la base de datos importando `database/esquema.sql`.
-3. Iniciar el servidor PHP desde la carpeta del proyecto:
+1. Clonar el repositorio:
+
+```bash
+git clone https://github.com/ElJambux/AulaFix.git
+```
+
+2. Entrar en la carpeta del proyecto:
+
+```bash
+cd AulaFix
+```
+
+3. Configurar los datos de conexión a MySQL en `config/config.php`.
+
+4. Crear la base de datos importando el archivo `database/esquema.sql`.
+
+5. Iniciar el servidor PHP desde la carpeta del proyecto:
 
 ```bash
 php -S localhost:8000 -t public
+```
+
+6. Abrir la aplicación en el navegador:
+
+```text
+http://localhost:8000
+```
+
+## Base de datos
+
+La aplicación utiliza las siguientes tablas:
+
+- `usuarios`: almacena los datos de los usuarios y sus roles.
+- `equipos`: almacena información de los equipos informáticos.
+- `incidencias`: almacena las incidencias registradas.
+- `historial`: registra las acciones realizadas sobre las incidencias.
+
+## Seguridad
+
+- Contraseñas almacenadas mediante `password_hash()` con Argon2id.
+- Consultas preparadas mediante PDO.
+- Protección contra CSRF.
+- Escape de datos antes de mostrarlos en HTML.
+- Control de acceso según el rol del usuario.
+- Gestión segura de sesiones.
+
+## Autor
+
+Proyecto desarrollado para los módulos 0612 y 0613 de Desarrollo de Aplicaciones Web (DAW).

@@ -3,17 +3,48 @@ declare(strict_types=1);
 
 /**
  * Muestra el listado de incidencias registradas.
- *
- * En el Hito 1 los datos se almacenan temporalmente en la sesión.
+ * Los datos se recuperan desde la base de datos.
  */
 
 session_start();
 
+// Comprobar que el usuario ha iniciado sesión.
+if (!isset($_SESSION['usuario'])) {
+    header('Location: /login.php');
+    exit;
+}
+
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/funciones.php';
 
-// Recuperamos las incidencias guardadas en la sesión.
-$incidencias = $_SESSION['incidencias'] ?? [];
+// Recuperar las incidencias desde MySQL.
+$conexion = conectarBD();
 
+if ($_SESSION['usuario']['rol'] === 'profesor') {
+    $consulta = $conexion->query(
+        'SELECT id, titulo, descripcion, categoria, prioridad, estado,
+                fecha_creacion AS fecha
+         FROM incidencias
+         ORDER BY fecha_creacion DESC'
+    );
+} else {
+    $consulta = $conexion->prepare(
+        'SELECT id, titulo, descripcion, categoria, prioridad, estado,
+                fecha_creacion AS fecha
+         FROM incidencias
+         WHERE usuario_id = :usuario_id
+         ORDER BY fecha_creacion DESC'
+    );
+
+    $consulta->execute([
+        'usuario_id' => $_SESSION['usuario']['id']
+    ]);
+}
+
+$incidencias = $consulta->fetchAll();
+
+// Preparar los datos para JavaScript de forma segura.
 $datosJson = json_encode(
     $incidencias,
     JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP
@@ -54,7 +85,11 @@ require_once __DIR__ . '/../includes/cabecera.php';
 
         <div class="filtros">
             <label for="buscar-incidencia">Buscar:</label>
-            <input type="search" id="buscar-incidencia" placeholder="Buscar por título...">
+            <input
+                type="search"
+                id="buscar-incidencia"
+                placeholder="Buscar por título..."
+            >
 
             <label for="filtro-categoria">Categoría:</label>
             <select id="filtro-categoria">
@@ -85,12 +120,24 @@ require_once __DIR__ . '/../includes/cabecera.php';
         <table id="tabla-incidencias">
             <thead>
                 <tr>
-                    <th><button type="button" data-orden="id">ID</button></th>
-                    <th><button type="button" data-orden="titulo">Título</button></th>
-                    <th><button type="button" data-orden="categoria">Categoría</button></th>
-                    <th><button type="button" data-orden="prioridad">Prioridad</button></th>
-                    <th><button type="button" data-orden="estado">Estado</button></th>
-                    <th><button type="button" data-orden="fecha">Fecha</button></th>
+                    <th>
+                        <button type="button" data-orden="id">ID</button>
+                    </th>
+                    <th>
+                        <button type="button" data-orden="titulo">Título</button>
+                    </th>
+                    <th>
+                        <button type="button" data-orden="categoria">Categoría</button>
+                    </th>
+                    <th>
+                        <button type="button" data-orden="prioridad">Prioridad</button>
+                    </th>
+                    <th>
+                        <button type="button" data-orden="estado">Estado</button>
+                    </th>
+                    <th>
+                        <button type="button" data-orden="fecha">Fecha</button>
+                    </th>
                 </tr>
             </thead>
 
@@ -98,7 +145,11 @@ require_once __DIR__ . '/../includes/cabecera.php';
                 <?php foreach ($incidencias as $incidencia): ?>
                     <tr>
                         <td><?= e((string) $incidencia['id']) ?></td>
-                        <td><?= e($incidencia['titulo']) ?></td>
+                        <td>
+                            <a href="/detalle.php?id=<?= (int) $incidencia['id'] ?>">
+                                <?= e($incidencia['titulo']) ?>
+                            </a>
+                        </td>
                         <td><?= e($incidencia['categoria']) ?></td>
                         <td><?= e($incidencia['prioridad']) ?></td>
                         <td><?= e($incidencia['estado']) ?></td>
@@ -109,9 +160,8 @@ require_once __DIR__ . '/../includes/cabecera.php';
         </table>
 
     <?php endif; ?>
-    <script id="datos-incidencias" type="application/json">
-<?= $datosJson ?>
-</script>
+
+    <script id="datos-incidencias" type="application/json"><?= $datosJson ?></script>
 </section>
 
 <script type="module" src="/js/incidencias.js"></script>
