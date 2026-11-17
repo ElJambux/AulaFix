@@ -121,3 +121,16 @@ La aplicación utiliza las siguientes tablas:
 ## Autor
 
 Proyecto desarrollado para los módulos 0612 y 0613 de Desarrollo de Aplicaciones Web (DAW).
+
+## Uso de herramientas de inteligencia artificial
+
+Durante el desarrollo de AulaFix se ha utilizado ChatGPT como herramienta de apoyo para:
+
+- Resolver dudas sobre PHP, JavaScript, MySQL y Git.
+- Comprender y corregir errores durante el desarrollo.
+- Recibir orientación sobre seguridad, validación de formularios y organización del proyecto.
+- Revisar código y comprobar el funcionamiento de las distintas partes de la aplicación.
+
+La herramienta se ha utilizado como apoyo al aprendizaje y al desarrollo, revisando y probando las soluciones antes de incorporarlas al proyecto.
+
+El autor del proyecto es responsable del código desarrollado y debe conocer su funcionamiento para poder explicarlo y justificar las decisiones técnicas durante la defensa.
