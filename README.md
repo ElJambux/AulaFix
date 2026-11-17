@@ -16,7 +16,7 @@ AulaFix permite registrar, consultar y gestionar incidencias relacionadas con lo
 - JavaScript vanilla
 - Git y GitHub
 
-## Funcionalidades previstas
+## Funcionalidades
 
 - Registro e inicio de sesión de usuarios.
 - Gestión de roles: alumno y profesor.
@@ -35,19 +35,25 @@ AulaFix/
 ├── database/
 ├── includes/
 ├── public/
+│   ├── css/
+│   └── js/
 ├── docs/
 ├── .gitignore
 └── README.md
 ```
 
-## Instalación
+## Requisitos
 
-Las instrucciones de instalación y configuración se completarán durante el desarrollo del proyecto.
+- PHP 8.3 o superior.
+- MySQL 8.
+- Extensiones PDO y PDO MySQL de PHP.
+- Navegador web moderno.
 
-## Autor
+## Ejecución en local
 
-Proyecto académico desarrollado individualmente para los módulos de Desarrollo Web en Entorno Servidor y Desarrollo Web en Entorno Cliente.
+1. Configurar la conexión a MySQL en `config/config.php`.
+2. Crear la base de datos importando `database/esquema.sql`.
+3. Iniciar el servidor PHP desde la carpeta del proyecto:
 
-## Estado
-
-En desarrollo.
+```bash
+php -S localhost:8000 -t public
